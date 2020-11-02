@@ -944,7 +944,7 @@ func (as *availabilitySet) EnsureBackendPoolDeleted(service *v1.Service, backend
 		nic, vmasID, err := as.getPrimaryInterfaceWithVMSet(vmName, vmSetName)
 		if err != nil {
 			if err == errNotInVMSet {
-				klog.V(3).Infof("EnsureBackendPoolDeleted skips node %s because it is not in the vmSet %s", nodeName, vmSetName)
+				klog.V(2).Infof("EnsureBackendPoolDeleted skips node %s because it is not in the vmSet %s", nodeName, vmSetName)
 				return nil
 			}
 
