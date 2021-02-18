@@ -20,6 +20,7 @@ package azure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
@@ -665,7 +666,7 @@ func (az *Cloud) ensurePublicIPExists(service *v1.Service, pipName string, domai
 		if strings.EqualFold(getDomainNameLabel(&pip), domainNameLabel) {
 			if existingServiceName, ok := pip.Tags[serviceUsingDNSKey]; ok &&
 				strings.EqualFold(*existingServiceName, serviceName) {
-				klog.V(6).Infof("ensurePublicIPExists for service(%s): pip(%s) - "+
+				klog.V(2).Infof("ensurePublicIPExists for service(%s): pip(%s) - "+
 					"the service is using the DNS label on the public IP", serviceName, pipName)
 
 				var rerr *retry.Error
@@ -763,6 +764,8 @@ func (az *Cloud) ensurePublicIPExists(service *v1.Service, pipName string, domai
 	}
 
 	klog.V(2).Infof("CreateOrUpdatePIP(%s, %q): start", pipResourceGroup, *pip.Name)
+	pipJson, _ := json.Marshal(pip)
+	klog.Infof("pip: %s", string(pipJson))
 	err = az.CreateOrUpdatePIP(service, pipResourceGroup, pip)
 	if err != nil {
 		klog.V(2).Infof("ensure(%s) abort backoff: pip(%s)", serviceName, *pip.Name)
