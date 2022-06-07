@@ -175,6 +175,11 @@ func (c *CloudNodeLifecycleController) MonitorNodes(ctx context.Context) {
 			shutdown, err := shutdownInCloudProvider(ctx, c.cloud, node)
 			if err != nil {
 				klog.Errorf("error checking if node %s is shutdown: %v", node.Name, err)
+				if errors.Is(err, cloudprovider.InstanceNotFound) {
+					if err := c.kubeClient.CoreV1().Nodes().Delete(ctx, node.Name, metav1.DeleteOptions{}); err != nil {
+						klog.Errorf("unable to delete node %q: %v", node.Name, err)
+					}
+				}
 			}
 
 			if shutdown && err == nil {

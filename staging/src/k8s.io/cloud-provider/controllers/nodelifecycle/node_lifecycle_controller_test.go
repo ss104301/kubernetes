@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	cloudprovider "k8s.io/cloud-provider"
 	fakecloud "k8s.io/cloud-provider/fake"
 	"k8s.io/klog/v2"
 )
@@ -709,6 +710,34 @@ func Test_NodesShutdown(t *testing.T) {
 				NodeShutdown:            true,
 				ExistsByProviderID:      false,
 				ErrShutdownByProviderID: nil,
+			},
+		},
+		{
+			name: "node is ready at the beginning, but is deleted just before checking if it is shutdown",
+			existingNode: &v1.Node{
+				Spec: v1.NodeSpec{
+					ProviderID: "node0",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "node0",
+					CreationTimestamp: metav1.Date(2012, 1, 1, 0, 0, 0, 0, time.Local),
+				},
+				Status: v1.NodeStatus{
+					Conditions: []v1.NodeCondition{
+						{
+							Type:               v1.NodeReady,
+							Status:             v1.ConditionUnknown,
+							LastHeartbeatTime:  metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.Local),
+							LastTransitionTime: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.Local),
+						},
+					},
+				},
+			},
+			expectedDeleted: true,
+			fakeCloud: &fakecloud.Cloud{
+				NodeShutdown:            false,
+				ExistsByProviderID:      true,
+				ErrShutdownByProviderID: cloudprovider.InstanceNotFound,
 			},
 		},
 	}
